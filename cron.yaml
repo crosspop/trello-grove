@@ -1,0 +1,4 @@
+cron:
+- description: polling
+  url: /poll
+  schedule: every 1 minutes
