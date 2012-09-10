@@ -11,6 +11,25 @@ It uses `Google App Engine <GAE>`_.
 .. _GAE: https://developers.google.com/appengine/
 
 
+Installtion
+-----------
+
+1. Download and install `Google App Engine`_ Python SDK.
+2. Change the ``name`` field of ``app.yaml``.
+3. Deploy__ the bot using ``appcfg.py``.
+4. Go to ``http://<app-name>.appspot.com/``.
+   It will requires you to authenticate.
+5. Fill Trello app key (you can make it here__) and Grove channel token.
+6. Authenticate Trello account using OAuth.
+7. Done.  Notibot will post notification messages to the channel soon
+   (less than 2 minutes).
+
+.. image:: https://raw.github.com/crosspop/trello-grove/master/settings.png
+
+__ https://developers.google.com/appengine/docs/python/tools/uploadinganapp#Uploading_the_App
+__ https://trello.com/1/appKey/generate
+
+
 Open source
 -----------
 
