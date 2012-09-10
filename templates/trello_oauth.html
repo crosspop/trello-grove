@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Saving token&hellip;</title>
+    <script>
+    window.onload = function() {
+      if (!location.hash) return;
+      var pairs = location.hash.substr(1).split('&');
+      var form = document.createElement('form');
+      for (var i = 0; i < pairs.length; ++i) {
+        var pair = pairs[i].split('=');
+        var field = document.createElement('input');
+        field.type = 'hidden';
+        field.name = pair[0];
+        field.value = pair[1];
+        form.appendChild(field);
+      }
+      form.action = '/trello-oauth';
+      form.method = 'post';
+      document.body.appendChild(form);
+      form.submit();
+    };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

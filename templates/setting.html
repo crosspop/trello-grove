@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Trello&ndash;Grove NotiBot</title>
+    <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css">
+    <style>
+    body { padding-top: 1em; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="navbar">
+        <div class="navbar-inner">
+          <a class="brand" href="#">Trello&ndash;Grove NotiBot</a>
+        </div>
+      </div>
+      <div class="page-header">
+        <h1>Settings <small>Service connections</small></h1>
+      </div>
+      <form action="" method="post" class="form-horizontal">
+        <legend>Trello</legend>
+        <div class="control-group">
+          <label class="control-label" for="app-key">App key</label>
+          <div class="controls">
+            <input type="text" id="app-key" name="trello.app_key"
+                   placeholder="App key"
+                   value="{{ settings['trello.app_key'] }}">
+            <span class="inline-help">You can create your Trello app
+              <a href="https://trello.com/1/appKey/generate">here</a>.</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="oauth-token">OAuth token</label>
+          <div class="controls">
+            {% if settings['trello.oauth_token'] %}
+              <a class="btn disabled btn-success">Authenticated</a>
+            {% elif settings['trello.app_key'] %}
+              <a href="{{- '' -}}
+https://trello.com/1/authorize?key=
+{{- settings['trello.app_key'] -}}&return_url={{ auth_url -}}
+&name=Trello-Grove+NotiBot&expiration=never&response_type=fragment"
+                class="btn">Authenticate</a>
+            {% else %}
+              <a class="btn disabled">Authenticate</a>
+              <span class="inline-help">You should save Trello app key
+                first.</span>
+            {% endif %}
+          </div>
+        </div>
+        <legend>Grove</legend>
+        <div class="control-group">
+          <label class="control-label" for="channel-token">Channel
+            Token</label>
+          <div class="controls">
+            <input type="text" id="channel-token" name="grove.channel_token"
+                   placeholder="Channel token"
+                   value="{{ settings['grove.channel_token']  }}">
+          </div>
+        </div>
+        <div class="form-actions">
+          {% if all_filled %}
+            <button type="submit" class="btn btn-success">Completely
+              filled</button>
+          {% else %}
+            <button type="submit" class="btn btn-primary">Save settings</button>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
