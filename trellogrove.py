@@ -54,18 +54,22 @@ def update_settings(settings):
 class Action(dict):
 
     @classmethod
-    def all(cls):
+    def all(cls, since=None):
+        """Polls all actions from Trello."""
         boards = fetch('https://trello.com/1/members/me/boards?' + cls.sign())
         result = []
-        board_url = 'https://trello.com/1/boards/{0}/actions?{1}'
+        board_url = 'https://trello.com/1/boards/{0}/actions?{1}{2}'
+        since_query = 'since=' + since + '&' if since else ''
         for board in json.loads(boards.content):
-            url = board_url.format(board['id'], cls.sign())
+            url = board_url.format(board['id'], since_query, cls.sign())
             actions = json.loads(fetch(url).content)
             result.extend(map(cls, actions))
+        result.sort(key=lambda d: d['date'])
         return result
 
     @staticmethod
     def sign():
+        """Generates a signing query."""
         fmt = 'key={0[trello.app_key]}&token={0[trello.oauth_token]}'
         return fmt.format(get_settings())
 
@@ -205,10 +209,15 @@ class TrelloOAuthPage(BaseHandler):
 
 def poll():
     """Does polling from Trello and posts messages to Grove."""
-    actions = Action.all()
-    token = get_settings('grove.channel_token')
-    for noti in actions:
-        post(unicode(noti), noti.link_url, token)
+    settings = get_settings()
+    latest = settings.get('trello.latest_date')
+    actions = Action.all(since=latest)
+    if actions:
+        latest = max(action['date'] for action in actions)
+        update_settings({'trello.latest_date': latest})
+        token = settings['grove.channel_token']
+        for noti in actions:
+            post(unicode(noti), noti.link_url, token)
 
 
 def post(message, link_url, token):
