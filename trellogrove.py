@@ -2,10 +2,15 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
+import json
+import logging
 import os.path
+import urllib
 import urlparse
 
+from google.appengine.api.urlfetch import fetch
 from google.appengine.ext.db import Model, StringProperty, put
+from google.appengine.ext.deferred import defer
 from jinja2 import Environment, FileSystemLoader
 from webapp2 import RequestHandler, WSGIApplication
 
@@ -44,6 +49,104 @@ def update_settings(settings):
         pair = Setting(name=key, value=value)
         objects.append(pair)
     put(objects)
+
+
+class Action(dict):
+
+    @classmethod
+    def all(cls):
+        boards = fetch('https://trello.com/1/members/me/boards?' + cls.sign())
+        result = []
+        board_url = 'https://trello.com/1/boards/{0}/actions?{1}'
+        for board in json.loads(boards.content):
+            url = board_url.format(board['id'], cls.sign())
+            actions = json.loads(fetch(url).content)
+            result.extend(map(cls, actions))
+        return result
+
+    @staticmethod
+    def sign():
+        fmt = 'key={0[trello.app_key]}&token={0[trello.oauth_token]}'
+        return fmt.format(get_settings())
+
+    @property
+    def id(self):
+        """The action id."""
+        return self['id']
+
+    @property
+    def url(self):
+        """The url of the action."""
+        return 'https://trello.com/1/actions/' + str(self.id)
+
+    @property
+    def data(self):
+        """The data dictionary."""
+        return self['data']
+
+    @property
+    def user(self):
+        """The agent."""
+        return self['memberCreator']['fullName']
+
+    @property
+    def card(self):
+        """The card name."""
+        return self.data.get('card', {}).get('name')
+
+    @property
+    def link_url(self):
+        if 'card' in self.data:
+            fmt = 'https://trello.com/card/-/{0.data[board][id]}/' \
+                  '{0.data[card][idShort]}'.format(self)
+        else:
+            fmt = 'https://trello.com/board/-/{0.data[board][id]}'
+        return str(fmt.format(self))
+
+    @property
+    def board(self):
+        """The board name."""
+        return self.data['board']['name']
+
+    def is_change(self):
+        """Returns whether the noti is about change of card."""
+        return self['type'] == 'changeCard'
+
+    def is_create(self):
+        """Returns whether the noti is about new card."""
+        return self['type'] == 'createdCard'
+
+    def is_close(self):
+        """Returns whether the noti is about closing of card."""
+        if not self.is_change():
+            return False
+        return self.data.get('old', {}).get('closed', False)
+
+    def is_comment(self):
+        """Returns whether the noti is about new comment."""
+        return self['type'] == 'commentCard'
+
+    def __unicode__(self):
+        if self.is_close():
+            msg = u'{0.user} closed card "{0.card}" in "{0.board}".'
+        elif self.is_change():
+            msg = u'{0.user} moved card "{0.card}" from ' \
+                  u'"{0.data[listBefore][name]}" to ' \
+                  u'"{0.data[listAfter][name]}" ({0.board} board).'
+        elif self.is_create():
+            msg = u'{0.user} created card "{0.card}" into ' \
+                  u'"{0.data[list][name]}" ({0.board} board)'
+        elif self.is_comment():
+            msg = u'{0.user} commented to card "{0.card}" ({0.board} board)'
+        else:
+            msg = u'{0.user} {0[type]} {0.card} ({0.board} board)'
+            logger = logging.getLogger(__name__ + '.Action.__unicode__')
+            logger.warn(repr(self))
+        return msg.format(self)
+
+    def __repr__(self):
+        r = super(Action, self).__repr__()
+        return 'Action({0})'.format(r)
 
 
 #: (:class:`jinja2.Environment`) The Jinja2 environment.
@@ -94,8 +197,42 @@ class TrelloOAuthPage(BaseHandler):
         self.redirect('/')
 
 
+def poll():
+    """Does polling from Trello and posts messages to Grove."""
+    actions = Action.all()
+    token = get_settings('grove.channel_token')
+    for noti in actions:
+        post(unicode(noti), noti.link_url, token)
+
+
+def post(message, link_url, token):
+    """Posts a message to the Grove channel."""
+    payload = {
+        'service': 'Trello',
+        'message': message.encode('utf-8') + ' \xe2\x80\x94 ' + link_url,
+        'url': link_url,
+        'icon_url': 'https://trello.com/favicon.ico'
+    }
+    response = fetch(
+        'https://grove.io/api/notice/{0}/'.format(token),
+        payload=urllib.urlencode(payload),
+        method='POST'
+    )
+    if response.status_code != 200:
+        logger = logging.getLogger(__name__ + '.post')
+        logger.warn('%d: %s', response.status_code, response.content)
+
+
+class PollPage(BaseHandler):
+    """Does polling notifcations from Trello."""
+
+    def get(self):
+        defer(poll)
+
+
 #: (:class:`webapp2.WSGIApplication`) The WSGI callable entrypoint.
 app = WSGIApplication([
     ('/', SettingPage),
-    ('/trello-oauth', TrelloOAuthPage)
+    ('/trello-oauth', TrelloOAuthPage),
+    ('/poll', PollPage)
 ], debug=True)
