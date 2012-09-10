@@ -25,9 +25,11 @@ def has_settings_complete():
             settings.get('grove.channel_token'))
 
 
-def get_settings():
+def get_settings(name=None):
     """Gets the current settings as dictionary."""
     pairs = Setting.all()
+    if name:
+        return pairs.filter('name =', name).get().value
     return dict((pair.name, pair.value) for pair in pairs if pair.name)
 
 
@@ -65,10 +67,9 @@ class SettingPage(BaseHandler):
     """Initial settings page."""
 
     def get(self):
-        settings = get_settings()
         auth_url = urlparse.urljoin(self.request.url, '/trello-oauth')
         self.render_template('setting.html',
-                             settings=settings,
+                             settings=get_settings(),
                              auth_url=auth_url,
                              all_filled=has_settings_complete())
 
