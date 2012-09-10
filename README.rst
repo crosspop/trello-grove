@@ -1,4 +1,4 @@
-Trello-Grove NotiBot
+Trello-Grove Notibot
 ====================
 
 .. image:: https://raw.github.com/crosspop/trello-grove/master/screenshot.png

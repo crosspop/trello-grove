@@ -1,4 +1,4 @@
-""":mod:`trellogrove` --- Trello-Grove NotiBot
+""":mod:`trellogrove` --- Trello-Grove Notibot
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
