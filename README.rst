@@ -14,7 +14,7 @@ It uses `Google App Engine <GAE>`_.
 Installtion
 -----------
 
-1. Download and install `Google App Engine`_ Python SDK.
+1. Download and install `Google App Engine <GAE>`_ Python SDK.
 2. Change the ``name`` field of ``app.yaml``.
 3. Deploy__ the bot using ``appcfg.py``.
 4. Go to ``http://<app-name>.appspot.com/``.
