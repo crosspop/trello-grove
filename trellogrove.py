@@ -242,7 +242,10 @@ class PollPage(BaseHandler):
     """Does polling notifcations from Trello."""
 
     def get(self):
-        defer(poll)
+        if has_settings_complete():
+            defer(poll)
+        else:
+            self.error(500)
 
 
 #: (:class:`webapp2.WSGIApplication`) The WSGI callable entrypoint.
