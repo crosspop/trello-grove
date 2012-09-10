@@ -1,7 +1,9 @@
-Trello_-Grove_ NotiBot
-======================
+Trello-Grove NotiBot
+====================
 
-This is a small bot which relays Trello notifications to the Grove channel.
+.. image:: https://raw.github.com/crosspop/trello-grove/master/screenshot.png
+
+This is a small bot which relays Trello_ notifications to the Grove_ channel.
 It uses `Google App Engine <GAE>`_.
 
 .. _Trello: http://trello.com/
