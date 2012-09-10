@@ -16,6 +16,15 @@ class Setting(Model):
     name = StringProperty(required=True, indexed=True)
     value = StringProperty(multiline=True)
 
+
+def has_settings_complete():
+    """Returns ``True`` only if the all settings are completely filled."""
+    settings = get_settings()
+    return (settings.get('trello.app_key') and
+            settings.get('trello.oauth_token') and
+            settings.get('grove.channel_token'))
+
+
 def get_settings():
     """Gets the current settings as dictionary."""
     pairs = Setting.all()
@@ -58,13 +67,10 @@ class SettingPage(BaseHandler):
     def get(self):
         settings = get_settings()
         auth_url = urlparse.urljoin(self.request.url, '/trello-oauth')
-        all_filled = (settings.get('trello.app_key') and
-                      settings.get('trello.oauth_token') and
-                      settings.get('grove.channel_token'))
         self.render_template('setting.html',
                              settings=settings,
                              auth_url=auth_url,
-                             all_filled=all_filled)
+                             all_filled=has_settings_complete())
 
     def post(self):
         update_settings({
