@@ -109,8 +109,14 @@ class Action(dict):
         return self.data['board']['name']
 
     def is_change(self):
-        """Returns whether the noti is about change of card."""
-        return self['type'] == 'changeCard'
+        """Returns whether the action is about change of card."""
+        return self['type'] in ('changeCard', 'updateCard')
+
+    def is_move(self):
+        """Returns whether the action is about moving position of card."""
+        if not self.is_change():
+            return False
+        return 'pos' in self.data.get('old', {})
 
     def is_create(self):
         """Returns whether the noti is about new card."""
@@ -129,7 +135,7 @@ class Action(dict):
     def __unicode__(self):
         if self.is_close():
             msg = u'{0.user} closed card "{0.card}" in "{0.board}".'
-        elif self.is_change():
+        elif self.is_move():
             msg = u'{0.user} moved card "{0.card}" from ' \
                   u'"{0.data[listBefore][name]}" to ' \
                   u'"{0.data[listAfter][name]}" ({0.board} board).'
