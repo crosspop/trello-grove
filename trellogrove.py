@@ -120,7 +120,7 @@ class Action(dict):
         """Returns whether the action is about moving position of card."""
         if not self.is_change():
             return False
-        return 'pos' in self.data.get('old', {})
+        return 'listBefore' in self.data.get('old', {})
 
     def is_create(self):
         """Returns whether the noti is about new card."""
