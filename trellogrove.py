@@ -154,8 +154,8 @@ class Action(dict):
         elif self.is_comment():
             msg = u'{0.user} commented to card "{0.card}" ({0.board} board)'
         elif self.is_attachment():
-            msg = u'{0.user} attach a file ({0.data[attachment][url]}) to ' \
-                  u'card "{0.card}" ({0.board} board)'
+            msg = u'{0.user} attach a file {{{0.data[attachment][url]}}} ' \
+                  u'to card "{0.card}" ({0.board} board)'
         else:
             msg = u'{0.user} {0[type]} {0.card} ({0.board} board)'
             logger = logging.getLogger(__name__ + '.Action.__unicode__')
