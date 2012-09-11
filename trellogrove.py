@@ -52,6 +52,7 @@ def update_settings(settings):
 
 
 class Action(dict):
+    """The rich dictionary to represent Trello actions."""
 
     @classmethod
     def all(cls, since=None):
