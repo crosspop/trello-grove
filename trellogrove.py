@@ -136,6 +136,10 @@ class Action(dict):
         """Returns whether the noti is about new comment."""
         return self['type'] == 'commentCard'
 
+    def is_attachment(self):
+        """Returns whether the action is about new attachment."""
+        return self['type'] == 'addAttachmentToCard'
+
     def __unicode__(self):
         if self.is_close():
             msg = u'{0.user} closed card "{0.card}" in "{0.board}".'
@@ -148,6 +152,9 @@ class Action(dict):
                   u'"{0.data[list][name]}" ({0.board} board)'
         elif self.is_comment():
             msg = u'{0.user} commented to card "{0.card}" ({0.board} board)'
+        elif self.is_attachment():
+            msg = u'{0.user} attach a file ({0.data[attachment][url]}) to ' \
+                  u'card "{0.card}" ({0.board} board)'
         else:
             msg = u'{0.user} {0[type]} {0.card} ({0.board} board)'
             logger = logging.getLogger(__name__ + '.Action.__unicode__')
