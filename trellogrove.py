@@ -1,5 +1,5 @@
-""":mod:`trellogrove` --- Trello-Grove Notibot
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""":mod:`trellogrove` --- Trello IRC Notibot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
 import json
@@ -27,7 +27,7 @@ def has_settings_complete():
     settings = get_settings()
     return (settings.get('trello.app_key') and
             settings.get('trello.oauth_token') and
-            settings.get('grove.channel_token'))
+            settings.get('webhook_url'))
 
 
 def get_settings(name=None):
@@ -61,6 +61,8 @@ class Action(dict):
         result = []
         board_url = 'https://trello.com/1/boards/{0}/actions?{1}{2}'
         since_query = 'since=' + since + '&' if since else ''
+        logger = logging.getLogger(__name__ + '.Action.all')
+        logger.debug(boards.content)
         for board in json.loads(boards.content):
             url = board_url.format(board['id'], since_query, cls.sign())
             actions = json.loads(fetch(url).content)
@@ -197,7 +199,7 @@ class SettingPage(BaseHandler):
     def post(self):
         update_settings({
             'trello.app_key': self.request.POST['trello.app_key'],
-            'grove.channel_token': self.request.POST['grove.channel_token']
+            'webhook_url': self.request.POST['webhook_url']
         })
         return self.get()
 
@@ -216,34 +218,43 @@ class TrelloOAuthPage(BaseHandler):
 
 
 def poll():
-    """Does polling from Trello and posts messages to Grove."""
+    """Does polling from Trello and posts messages to IRC."""
+    logger = logging.getLogger(__name__ + '.poll')
     settings = get_settings()
     latest = settings.get('trello.latest_date')
     actions = Action.all(since=latest)
     if actions:
         latest = max(action['date'] for action in actions)
         update_settings({'trello.latest_date': latest})
-        token = settings['grove.channel_token']
+        webhook_url = settings['webhook_url']
         for noti in actions:
-            post(unicode(noti), noti.link_url, token)
+            try:
+                message = unicode(noti)
+                link_url = noti.link_url
+            except Exception as e:
+                logger.exception(e)
+            else:
+                post(message, link_url, webhook_url)
 
 
-def post(message, link_url, token):
-    """Posts a message to the Grove channel."""
+def post(message, link_url, webhook_url):
+    """Posts a message to the IRC channel."""
+    logger = logging.getLogger(__name__ + '.post')
     payload = {
         'service': 'Trello',
         'message': message.encode('utf-8') + ' \xe2\x80\x94 ' + link_url,
         'url': link_url,
         'icon_url': 'https://trello.com/favicon.ico'
     }
+    logger.info(webhook_url)
+    logger.info('%r', payload)
     response = fetch(
-        'https://grove.io/api/notice/{0}/'.format(token),
+        webhook_url,
         payload=urllib.urlencode(payload),
         method='POST'
     )
-    if response.status_code != 200:
-        logger = logging.getLogger(__name__ + '.post')
-        logger.warn('%d: %s', response.status_code, response.content)
+    level = logging.INFO if response.status_code == 200 else logging.WARNING
+    logger.log(level, '%d: %s', response.status_code, response.content)
 
 
 class PollPage(BaseHandler):

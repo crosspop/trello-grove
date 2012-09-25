@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Trello&ndash;Grove Notibot</title>
+    <title>Trello IRC Notibot</title>
     <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css">
     <style>
     body { padding-top: 1em; }
@@ -12,7 +12,7 @@
     <div class="container">
       <div class="navbar">
         <div class="navbar-inner">
-          <a class="brand" href="#">Trello&ndash;Grove Notibot</a>
+          <a class="brand" href="#">Trello IRC Notibot</a>
         </div>
       </div>
       <div class="page-header">
@@ -39,7 +39,7 @@
               <a href="{{- '' -}}
 https://trello.com/1/authorize?key=
 {{- settings['trello.app_key'] -}}&return_url={{ auth_url -}}
-&name=Trello-Grove+Notibot&expiration=never&response_type=fragment"
+&name=Trello+IRC+Notibot&expiration=never&response_type=fragment"
                 class="btn">Authenticate</a>
             {% else %}
               <a class="btn disabled">Authenticate</a>
@@ -48,14 +48,14 @@ https://trello.com/1/authorize?key=
             {% endif %}
           </div>
         </div>
-        <legend>Grove</legend>
+        <legend>Web hook</legend>
         <div class="control-group">
-          <label class="control-label" for="channel-token">Channel
-            Token</label>
+          <label class="control-label" for="webhook-url"><tt>POST</tt>
+            URL</label>
           <div class="controls">
-            <input type="text" id="channel-token" name="grove.channel_token"
-                   placeholder="Channel token"
-                   value="{{ settings['grove.channel_token']  }}">
+            <input type="text" id="webhook-url" name="webhook_url"
+                   placeholder="Web POST hook URL"
+                   value="{{ settings['webhook_url']  }}">
           </div>
         </div>
         <div class="form-actions">
